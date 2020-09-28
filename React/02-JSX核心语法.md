@@ -222,7 +222,7 @@ JSX的书写规范：
 
 ## 3.2 JSX的使用
 
-### JSX的注释
+### 3.2.1 JSX的注释
 
 ```JavaScript
 render() {
@@ -235,7 +235,7 @@ render() {
 }
 ```
 
-### JSX嵌入变量
+### 3.2.2 JSX嵌入变量
 
 - 情况一：当变量是Number、String、Array类型时，可以直接显示
 
@@ -284,7 +284,7 @@ render() {
 }
 ```
 
-### JSX嵌入表达式
+### 3.2.3 JSX嵌入表达式
 
 JSX中，也可以是一个表达式。例如：
 
@@ -324,9 +324,13 @@ class App extends React.Component {
 }
 ```
 
-### JSX绑定属性
+### 3.2.4 JSX绑定属性
 
 ```JavaScript
+function getSizeImage(imgURL,size) {
+    return imgURL + `?param=${size}x${size}`
+}
+
 class App extends React.Component {
     constructor() {
         super()
@@ -364,3 +368,281 @@ class App extends React.Component {
 >
 > 1. 绑定class比较特殊，因为class在js中是一个关键字，所以jsx中不允许直接写class，使用className替代
 > 2. style后面跟的是一个对象类型，写js语法，对象中是样式的属性名和属性值键值对对象；使用驼峰标识，而不是连接符 -
+
+## 3.3 JSX事件监听
+
+### 3.3.1 this绑定问题
+
+**方案1：bind给btnClick显示绑定this**
+
+在传入函数时，我们可以主动绑定this：
+
+- 这里我们主动将btnClick中的this通过bind来进行绑定（显示绑定）
+- 那么之后React内部调用btnClick函数时，就会有一个this，并且是我们绑定的this；
+
+**方案2：使用ES6 class fields语法**
+
+在传入函数时，我们可以主动绑定this：
+
+- 这里我们主动将btnClick中的this通过bind来进行绑定（显示绑定）
+- 那么之后React内部调用btnClick函数时，就会有一个this，并且是我们绑定的this；
+
+**方案3：事件监听时传入箭头函数（推荐）**
+
+因为 `onClick` 中要求我们传入一个函数，那么我们可以直接定义一个箭头函数传入：
+
+- 传入的箭头函数的函数体是我们需要执行的代码，我们直接执行 `this.btnClick()`；
+- `this.btnClick()`中通过this来指定会进行隐式绑定，最终this也是正确的；
+
+> 箭头函数不绑定this，找上层作用域App，找到正确this
+
+```JavaScript
+class App extends React.Component {
+    constructor() {
+        super()
+
+        this.state = {
+            message: "Hello world",
+            counter : 100
+        }
+
+        this.btnClick = this.btnClick.bind(this);
+    }
+    render() {
+        return (
+            <div>
+                {/*方案一：bind绑定this(显示绑定)*/}
+                <button onClick={this.btnClick}>按钮1</button>
+                <button onClick={this.btnClick}>按钮2</button>
+                <button onClick={this.btnClick}>按钮3</button>
+
+                {/*方案二：定义函数时，使用箭头函数*/}
+                <button onClick={this.increment}>+1</button>
+
+                {/*方案三：直接传入一个箭头函数，在箭头函数中调用需要执行的函数*/}
+                <button onClick={ () => { this.decrement() } }>-1</button>
+			</div>
+		)
+	}
+    btnClick() {
+        console.log(this.state.message)
+    }
+    increment = () => {
+        console.log(this.state.counter)
+    }
+    decrement() {
+        console.log(this.state.counter)
+    }
+}
+//JSX语法
+ReactDOM.render(<App/>,document.getElementById("app"))
+```
+
+### 3.3.2 事件参数传递
+
+在执行事件函数时，有可能我们需要获取一些参数信息：比如event对象、其他参数。
+
+1. **原生获取event对象**
+
+```HTML
+<button class="btn">按钮</button>
+<script>
+    document.getElementsByClassName("btn")[0].addEventListener("click",(e) => {
+        console.log(e);
+    })
+</script>
+```
+
+2. 获取event对象
+
+   - 很多时候我们需要拿到event对象来做一些事情（比如阻止默认行为）
+   - 假如我们用不到this，那么直接传入函数就可以获取到event对象；
+
+   ```JavaScript
+   class App extends React.Component {
+       constructor() {
+           super()
+       }
+       render() {
+           return (
+               <div>
+               	<a href="http://www.baidu.com" onClick={this.btnClick}>百度一下</a>
+   			</div>
+   		)
+   	}
+       btnClick(event) {
+           //阻止a标签的默认行为
+           event.preventDefault();
+           console.log("按钮发生了点击",event);
+       }
+   }
+   ```
+
+3. 获取其他参数
+
+   - 有更多参数时，我们最好的方式就是传入一个箭头函数，主动执行的事件函数，并且传入相关的其他参数；
+
+   ```JavaScript
+   class App extends React.Component {
+               constructor() {
+                   super()
+   
+                   this.state = {
+                       movies: ["大话西游","流浪地球","哪吒","姜子牙"]
+                   }
+               }
+               render() {
+                   return (
+                       <div>
+                           <ul>
+                               {
+                                   this.state.movies.map((item,index,arr) => {
+                                       return (
+                                           <li onClick={(e) => this.liClick(item,index,e)}>{item}</li>
+                                       )
+                                   })
+                               }
+                           </ul>
+                       </div>
+                   )
+               }
+               liClick(item,index,e) {
+                   console.log(item,index,e);
+               }
+           }
+   ```
+
+## 3.4 条件渲染
+
+- 在vue中，我们会通过指令来控制：比如v-if、v-show；
+- 在React中，所有的条件判断都和普通的JavaScript代码一致；
+
+常见的条件渲染方式：
+
+1. 条件判断语句if：适合逻辑代码非常多的情况
+
+2. 三元运算符：根据不同的条件返回不同的结果
+
+3. 与运算符：条件成立，渲染一个组件，不成立，什么也不渲染
+
+   > 逻辑与：一个条件成立，另一个条件就不判断了
+
+```JavaScript
+class App extends React.Component {
+    constructor() {
+        super()
+
+        this.state = {
+            isLogin: true
+        }
+
+    }
+    render() {
+        const { isLogin } = this.state
+
+        // 1.通过if判断，逻辑代码非常多的情况
+        let welcome = null;
+        let btnText = null;
+        if(isLogin) {
+            welcome = "欢迎回来~"
+            btnText = "退出"
+        } else {
+            welcome = "请登录~"
+            btnText = "登录"
+        }
+        return (
+            <div>
+                <h2>{ welcome }</h2> 
+            	{/*2.三目运算符*/}
+                <button onClick={() => this.btnClick()}>{isLogin ? "退出" : "登录"}</button>
+                <hr/>
+            
+                <h2>{isLogin ? "你好啊，xxx" : null}</h2>
+				{/*3.逻辑与&&*/}
+                {/*逻辑与：isLogin为false，表达式为false，不显示*/}
+                <h2>{isLogin && "你好啊，xxx"}</h2>
+			</div>
+		)
+	}
+    btnClick() {
+        this.setState({
+            isLogin: !this.state.isLogin
+        })
+    }
+}
+```
+
+### 3.4.1 v-show效果（不频繁销毁创建DOM元素）
+
+针对一个HTML原生，渲染和不渲染之间，如果切换的非常频繁，那么会相对比较损耗性能：
+
+- 在开发中，其实我们可以通过display的属性来控制它的显示和隐藏；
+
+- 在控制方式在vue中有一个专门的指令：v-show；
+
+- React没有指令，但是React会更加灵活（灵活带来的代价就是需要自己去实现）；
+
+  > {isLogin && <h2>你好啊，xxx</h2>} ：此代码消耗性能
+
+```
+render() {
+    const { isLogin } = this.state
+    const displayValue = isLogin ? "block" : "none"
+    return (
+        <div>
+            <button onClick={e => this.btnClick()}>{isLogin ? "退出" : "登录"}</button>
+            <h2 style={{display: displayValue}}>你好啊，xxx</h2>
+        </div>
+	)
+}
+```
+
+## 3.5 列表渲染
+
+在React中，**展示列表**最多的方式就是使用数组的**map**高阶函数；
+
+很多时候我们在展示一个数组中的数据之前，需要先对它进行一些处理：
+
+- 比如**过滤**掉一些内容：**filter函数**
+- 比如**截取**数组中的一部分内容：**slice函数**
+
+```JavaScript
+constructor() {
+    super()
+
+    this.state = {
+        names: ["aaa","bbb","ccc","ddd","eee"],
+        numbers: [11,35,50,334,110,8,,70,99]
+    }
+
+}
+render() {
+    return (
+        <div>
+        <h2>名字列表</h2>
+        <ul>
+            {
+                this.state.names.map(item => {
+                	return <li>{item}</li>
+            	})
+            }
+   		</ul>
+        <h2>数字列表（过滤）</h2>
+        <ul>
+            {
+           		this.state.numbers.filter(item => item >= 50)
+                				.map(item => <li>{item}</li>)
+                 }
+        </ul>
+        <h2>数字列表（截取）</h2>
+        <ul>
+		{
+			this.state.numbers.slice(0,4)
+                			.map(item => <li>{item}</li>)
+		}
+        </ul>
+        </div>
+	)
+}
+```
+
