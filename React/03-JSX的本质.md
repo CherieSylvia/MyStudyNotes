@@ -155,7 +155,7 @@ return ReactElement(
    }
    ```
 
-   ![image-20200923160444799](C:\Users\sylvia\AppData\Roaming\Typora\typora-user-images\image-20200923160444799.png)
+   ![image-20200923160444799](images/image-20200923160444799.png)
 
 ## 2.2 为什么采用虚拟DOM
 
