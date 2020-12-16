@@ -35,49 +35,47 @@ https://www.warlock.live/archives.html
    </dependencies>
    ```
 
-3. 完成主要配置文件的编写（数据库连接和指定映射文件的位置[目的是为了不用自己实现数据库查询方法]）
+3. 完成主要配置文件的编写SqlMapConfig.xml（数据库连接和指定映射文件的位置[目的是为了不用自己实现数据库查询方法]）
 
    ```xml
-   <?xml version="1.0" encoding="UTF-8"?>      <!-- SqlMapConfig.xml -->
+   <?xml version="1.0" encoding="UTF-8"?>
    <!DOCTYPE configuration
            PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
            "http://mybatis.org/dtd/mybatis-3-config.dtd">
-   
-   <!-- Mybatis的主配置文件 -->
+   <!-- mybatis的主配置文件 -->
    <configuration>
-   <!--    &lt;!&ndash; 配置properties，来引入连接数据库所需要的对象，即图中的jdbcConfig.properties &ndash;&gt;-->
-   <!--    <properties resource="jdbcConfig.properties">  &lt;!&ndash; 配置信息与使用JDBC连接数据库所需要信息相同 &ndash;&gt;-->
-   <!--        &lt;!&ndash; resource用于指定配置文件的信息，按照类路径的写法来写，并且必须存在于类路径下 &ndash;&gt;-->
-   <!--    </properties>-->
+     <!-- 配置环境 -->
+     <environments default="mysql">
+       <!-- 配置mysql的环境-->
+       <environment id="mysql">
+         <!-- 配置事务的类型-->
+         <transactionManager type="JDBC"></transactionManager>
+         <!-- 配置数据源（连接池） -->
+         <dataSource type="POOLED">
+           <!-- 配置连接数据库的4个基本信息 -->
+           <property name="driver" value="com.mysql.jdbc.Driver"/>
+           <property name="url" value="jdbc:mysql://localhost:3306/eesy?serverTimezone=UTC"/>
+           <property name="username" value="root"/>
+           <property name="password" value="xxx1234567"/>
+         </dataSource>
+       </environment>
+     </environments>
    
-       <!-- 配置环境 -->
-       <environments default="mysql">
-           <!-- 配置mysql环境 -->
-           <environment id="mysql">
-               <!-- 配置事务的类型 -->
-               <transactionManager type="JDBC"></transactionManager>
-               <!-- 配置数据源(连接池) -->
-               <dataSource type="POOLED">
-                   <!-- 配置连接数据库的四个基本信息 -->
-                   <property name="driver" value="com.mysql.cj.jdbc.Driver"/>
-                   <property name="url" value="jdbc:mysql://localhost:3306/eesy_mybatis?serverTimezone=UTC"/>
-                   <property name="username" value="root"/>
-                   <property name="password" value="xxx1234567"/>
-               </dataSource>
-           </environment>
-       </environments>
-   
-       <!-- 指定映射配置文件的位置(映射配置文件指的是每个dao独立的配置文件) -->
-       <mappers>
-   <!--        基于注解开发-->
-           <mapper class="com.mybatis.dao.IUserDao"/>
-   <!--        基于xml开发-->
-   <!--                <mapper resource="com/mybatis/dao/IUserDao.xml"/>   &lt;!&ndash; 注意这里的文件结构最好和dao层结构相同(resources文件夹下) &ndash;&gt;-->
-       </mappers>
+     <!-- 指定映射配置文件的位置(映射配置文件指的是每个dao独立的配置文件) -->
+     <mappers>
+       <!--        基于注解开发(写接口的全限定类名)-->
+       <mapper class="com.mybatis.dao.IUserDao"/>
+       <!--        基于xml开发-->
+       <!--                <mapper resource="com/mybatis/dao/IUserDao.xml"/>   &lt;!&ndash; 注意这里的文件结构最好和dao层结构相同(resources文件夹下) &ndash;&gt;-->
+     </mappers>
    </configuration>
    ```
+   
+4.  创建实体类文件(domain.User)
 
-4. 基于xml开发的xml文件（resources文件夹下）
+5.  创建dao接口(dao.IUserDao/IUserMapper)
+
+6. 基于xml开发的xml文件（resources文件夹下）
 
    ```xml
    <?xml version="1.0" encoding="UTF-8" ?>
@@ -93,7 +91,20 @@ https://www.warlock.live/archives.html
    </mapper>
    ```
 
-5. 测试
+7.  基于注解的操作
+
+   修改SqlMapConfig.xml，并移除 xml 的映射配置（IUserDao.xml）。
+
+   ```xml
+   <mappers>
+     <!--基于注解开发(写接口的全限定类名)-->
+     <mapper class="com.mybatis.dao.IUserDao"/>
+     <!--基于xml开发-->
+     <!--<mapper resource="com/mybatis/dao/IUserDao.xml"/>   注意这里的文件结构最好和dao层结构相同(resources文件夹下) &ndash;&gt;-->
+   </mappers>
+   ```
+
+8. 测试
 
    ```Java
    package com.mybatis.dao;
